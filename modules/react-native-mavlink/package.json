@@ -1,0 +1,14 @@
+{
+  "name": "react-native-mavlink",
+  "version": "0.0.0",
+  "description": "react native mavlink for android",
+  "main": "src/index",
+  "author": " <> ()",
+  "license": "UNLICENSED",
+  "homepage": "#readme",
+  "create-react-native-library": {
+    "type": "module-legacy",
+    "languages": "kotlin-objc",
+    "version": "0.41.0"
+  }
+}
