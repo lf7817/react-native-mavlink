@@ -1,79 +1,31 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# react-native mavlink教程
 
-# Getting Started
+本教程介绍了在 react-native中使用 mavlink构建地面站 APP的方法。为了方便复用，采用[Local librarie](https://reactnative.dev/docs/local-library-setup)封装了 ``react-native-mavlink``模块（由于每个公司都会有自己的[XML Definition Files &amp; Dialects](https://mavlink.io/zh/messages/)，所以无法封装通用包发布到npm ）
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+支持串口、UDP/TCP服务端、UDP/TCP客户端等多种通讯方式，支持随意切换
 
-## Step 1: Start the Metro Server
+## 生成 MAVLink 库文件
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+将 definitions放到 ``modules/react-native-mavlink/definitions``目录下，然后再 ``build.gradle``中添加下面任务
 
-To start Metro, run the following command from the _root_ of your React Native project:
+```gradle
+tasks.generateMavlink {
+  include(file("definitions/minimal.xml"))
+  include(file("definitions/standard.xml"))
+  include(file("definitions/common.xml"))
 
-```bash
-# using npm
-npm start
-
-# OR using Yarn
-yarn start
+  generatedSourcesDir = file("src/main/kotlin")
+}
 ```
 
-## Step 2: Start your Application
+执行 ``gradle generateMavlink``即可生成代码到指定目录
 
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
+## 无人机容器
 
-### For Android
-
-```bash
-# using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### For iOS
+身边没有设备的可以使用[px4-gazebo-headless](https://github.com/JonasVautherin/px4-gazebo-headless)这个容器
 
 ```bash
-# using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
+docker run --rm -it jonasvautherin/px4-gazebo-headless:1.14.3 192.168.0.12 # 填写手机 IP地址
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
-
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
-
-## Step 3: Modifying your App
-
-Now that you have successfully run the app, let's modify it.
-
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
-
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+在手机端使用 UDP监听 14540端口即可收到数据

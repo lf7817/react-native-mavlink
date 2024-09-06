@@ -23,7 +23,7 @@ export default function App() {
   return (
     <View>
       <Button title="create serial connection" onPress={() => mavlinkModule.createSerial('/dev/ttyHS0', 115200)} />
-      <Button title="create udp service connection" onPress={() => mavlinkModule.createUdpServer(14550)} />
+      <Button title="create udp service connection" onPress={() => mavlinkModule.createUdpServer(14540)} />
       <Button title="create udp client connection" onPress={() => mavlinkModule.createUdpClient('192.168.144.12', 19856)} />
       <Button title="connect" onPress={() => mavlinkModule.connect()} />
       <Button title="disconnect" onPress={() => mavlinkModule.disconnect()} />
