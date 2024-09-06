@@ -1,1 +1,1 @@
-export { MavlinkModule } from './MavlinkModule'
+export { MavlinkModule } from './MavlinkModule';
