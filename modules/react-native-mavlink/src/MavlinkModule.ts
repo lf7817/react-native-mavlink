@@ -16,7 +16,6 @@ export class MavlinkModule {
   };
 
   public onMessage = (callback: (message: any) => void) => {
-    this.eventEmitter.removeAllListeners('message');
     this.eventEmitter.addListener('message', callback);
   };
 
