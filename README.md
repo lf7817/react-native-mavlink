@@ -1,6 +1,6 @@
 # react-native mavlink教程
 
-本教程介绍了在 react-native中使用 mavlink构建地面站 APP的方法。为了方便复用，采用[Local librarie](https://reactnative.dev/docs/local-library-setup)封装了 ``react-native-mavlink``模块（由于每个公司都会有自己的[XML Definition Files &amp; Dialects](https://mavlink.io/zh/messages/)，所以无法封装通用包发布到npm ）
+本教程介绍了在 react-native中使用 mavlink构建地面站 APP的方法。为了方便复用，采用[Local library](https://reactnative.dev/docs/local-library-setup)封装了 ``react-native-mavlink``模块（由于每个公司都会有自己的[XML Definition Files &amp; Dialects](https://mavlink.io/zh/messages/)，所以无法封装通用包发布到npm ）
 
 支持串口、UDP/TCP服务端、UDP/TCP客户端等多种通讯方式，支持随意切换
 
