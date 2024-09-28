@@ -18,9 +18,9 @@ class MavlinkPackage : ReactPackage {
   override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
     val appModule = module {
       single<MavController> { MavController(255u, 1u, CommonDialect) }
-      single { ConnectionService(get(), reactContext) }
-      single { TelemetryService(get(), reactContext) }
-      single { ParameterService(get(), reactContext) }
+      single { ConnectionService(reactContext) }
+      single { TelemetryService(reactContext) }
+      single { ParameterService(reactContext) }
     }
 
     startKoin {

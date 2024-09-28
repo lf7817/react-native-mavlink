@@ -18,9 +18,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeout
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class TelemetryService(private val mavController: MavController, reactContext: ReactApplicationContext): MavService(reactContext) {
-  
+class TelemetryService(reactContext: ReactApplicationContext): MavService(reactContext), KoinComponent {
+  private val mavController: MavController by inject()
+
   val armed: Flow<Boolean> = mavController.fcu.message
     .filterIsInstance<Heartbeat>()
     .map { it.baseMode.contains(MavModeFlag.SAFETY_ARMED) }

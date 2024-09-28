@@ -22,7 +22,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
 
-class ConnectionService(private val mavController: MavController, reactContext: ReactApplicationContext): MavService(reactContext), KoinComponent {
+class ConnectionService(reactContext: ReactApplicationContext): MavService(reactContext), KoinComponent {
+  private val mavController: MavController by inject()
   private val telemetryService: TelemetryService by inject()
   private var connectJob: Job? = null
   private var frameJob: Job? = null
