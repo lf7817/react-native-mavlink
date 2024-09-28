@@ -1,4 +1,4 @@
-package com.mavlink
+package com.mavlink.core
 
 class MavException(
   message: String,

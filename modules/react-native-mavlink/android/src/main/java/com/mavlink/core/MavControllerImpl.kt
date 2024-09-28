@@ -1,4 +1,4 @@
-package com.mavlink
+package com.mavlink.core
 
 import com.divpundir.mavlink.adapters.coroutines.CoroutinesMavConnection
 import com.divpundir.mavlink.api.AbstractMavDialect
@@ -12,10 +12,12 @@ internal class MavControllerImpl(
   // 默认创建 UDP服务端
   override var connection: CoroutinesMavConnection by MavCoroutinesConnection(dialect)
 
+  @Volatile
   override var fcu: MavRemoteNode = FcuNode(
     mavFrame = connection.mavFrame
   )
 
+  @Volatile
   override var all: MavRemoteNode = AllNode(
     frames = connection.mavFrame
   )

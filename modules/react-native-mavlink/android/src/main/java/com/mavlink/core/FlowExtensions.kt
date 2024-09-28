@@ -1,4 +1,4 @@
-package com.mavlink
+package com.mavlink.core
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow

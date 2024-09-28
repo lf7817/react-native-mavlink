@@ -1,4 +1,4 @@
-package com.mavlink
+package com.mavlink.core
 
 import android.util.Log
 import com.divpundir.mavlink.adapters.coroutines.CoroutinesMavConnection
@@ -6,6 +6,8 @@ import com.divpundir.mavlink.adapters.coroutines.asCoroutine
 import com.divpundir.mavlink.api.AbstractMavDialect
 import com.divpundir.mavlink.api.MavEnumValue
 import com.divpundir.mavlink.api.wrap
+import com.divpundir.mavlink.connection.tcp.TcpClientMavConnection
+import com.divpundir.mavlink.connection.tcp.TcpServerMavConnection
 import com.divpundir.mavlink.connection.udp.UdpClientMavConnection
 import com.divpundir.mavlink.connection.udp.UdpServerMavConnection
 import com.divpundir.mavlink.definitions.common.CommandAck
@@ -17,9 +19,13 @@ import com.divpundir.mavlink.definitions.common.ParamRequestRead
 import com.divpundir.mavlink.definitions.common.ParamSet
 import com.divpundir.mavlink.definitions.common.ParamValue
 import com.divpundir.mavlink.definitions.common.MavFrame
+import com.divpundir.mavlink.definitions.common.ParamRequestList
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.launch
 
 interface MavController : MavSender {
   val dialect: AbstractMavDialect
@@ -31,21 +37,35 @@ interface MavController : MavSender {
   var all: MavRemoteNode
 }
 
-suspend fun MavController.createUdpServer(port: Int)  {
+fun MavController.createUdpServer(port: Int)  {
   connection = UdpServerMavConnection(port, dialect).asCoroutine()
   fcu = FcuNode(connection.mavFrame)
   all = AllNode(connection.mavFrame)
   Log.d("Mavlink", "UDP: Created server on port $port")
 }
 
-suspend fun MavController.createUdpClient(ip: String, port: Int) {
+fun MavController.createUdpClient(ip: String, port: Int) {
   connection = UdpClientMavConnection(ip, port, dialect).asCoroutine()
   fcu = FcuNode(connection.mavFrame)
   all = AllNode(connection.mavFrame)
   Log.d("Mavlink", "Udp: create connection to $ip:$port")
 }
 
-suspend fun MavController.createSerial(path: String, burateRate: Int) {
+fun MavController.createTcpServer(port: Int) {
+  connection = TcpServerMavConnection(port, dialect).asCoroutine()
+  fcu = FcuNode(connection.mavFrame)
+  all = AllNode(connection.mavFrame)
+  Log.d("Mavlink", "TCP: Created server on port $port")
+}
+
+fun MavController.createTcpClient(ip: String, port: Int) {
+  connection = TcpClientMavConnection(ip, port, dialect).asCoroutine()
+  fcu = FcuNode(connection.mavFrame)
+  all = AllNode(connection.mavFrame)
+  Log.d("Mavlink", "TCP: create connection to $ip:$port")
+}
+
+fun MavController.createSerial(path: String, burateRate: Int) {
   connection = SerialMavConnection(path, burateRate, dialect).asCoroutine()
   fcu = FcuNode(connection.mavFrame)
   all = AllNode(connection.mavFrame)
@@ -68,21 +88,46 @@ suspend fun MavController.getParam(id: String): Float = coroutineScope {
   ack.await().paramValue
 }
 
-//suspend fun MavController.getParamList() = coroutineScope {
-//  val ack = async { fcu.receive<ParamRequestList>() }
-//  delay(10)
-//
-//  send(
-//    ParamRequestList(
-//      targetSystem = fcu.systemId,
-//      targetComponent = fcu.componentId,
-//    )
-//  )
-//
-//  ack.await().
-//}
+/**
+ * 获取参数列表
+ * @desc 发送ParamRequestList请求，等待返回参数列表
+ */
+suspend fun MavController.getParamList(send: ((String, Int) -> Unit)?) = coroutineScope {
+  val params = mutableListOf<ParamValue>()
+  var percent = 0
+  
+  val job = launch {
+    fcu.message.filterIsInstance<ParamValue>().collect {
+      params.add(it)
+      
+      val nPercent = params.size * 100 / it.paramCount.toInt()
 
-suspend fun MavController.setParam(id: String, value: Float): Unit = coroutineScope {
+      // 减少发送频率
+      if (percent != nPercent) {
+        percent = nPercent
+        send?.invoke("param:list:progress", percent)
+      }
+
+      if (params.size == it.paramCount.toInt()) {
+        cancel()
+      }
+    }
+  }
+  
+  delay(10)
+
+  send(
+    ParamRequestList(
+      targetSystem = fcu.systemId,
+      targetComponent = fcu.componentId,
+    )
+  )
+
+  job.join()
+  params
+}
+
+suspend fun MavController.setParam(id: String, value: Float) : Float = coroutineScope {
   val ack = async { fcu.receive<ParamValue> { it.paramId == id } }
   delay(10)
 
@@ -96,7 +141,7 @@ suspend fun MavController.setParam(id: String, value: Float): Unit = coroutineSc
     )
   )
 
-  ack.await()
+  ack.await().paramValue
 }
 
 suspend fun MavController.sendCommandLong(

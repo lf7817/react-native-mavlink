@@ -1,8 +1,6 @@
-package com.mavlink
+package com.mavlink.service
 
-import android.util.Log
 import com.divpundir.mavlink.api.MavEnumValue
-import com.divpundir.mavlink.api.MavMessage
 import com.divpundir.mavlink.api.contains
 import com.divpundir.mavlink.definitions.common.Attitude
 import com.divpundir.mavlink.definitions.common.MavCmd
@@ -10,15 +8,18 @@ import com.divpundir.mavlink.definitions.common.MavDataStream
 import com.divpundir.mavlink.definitions.common.RequestDataStream
 import com.divpundir.mavlink.definitions.minimal.Heartbeat
 import com.divpundir.mavlink.definitions.minimal.MavModeFlag
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.WritableMap
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactApplicationContext
+import com.mavlink.core.MavUtils
+import com.mavlink.core.MavController
+import com.mavlink.core.sendCommandLong
+import com.mavlink.core.throwIfFailure
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeout
 
-class TelemetryService(private val mavController: MavController) {
-  private val duration = 3000L
+class TelemetryService(private val mavController: MavController, reactContext: ReactApplicationContext): MavService(reactContext) {
   
   val armed: Flow<Boolean> = mavController.fcu.message
     .filterIsInstance<Heartbeat>()
@@ -46,42 +47,28 @@ class TelemetryService(private val mavController: MavController) {
     )
   }
   
-  suspend fun changeArmState(state: Boolean) = withTimeout(duration) {
-    mavController.sendCommandLong(
-      command = MavEnumValue.of(MavCmd.COMPONENT_ARM_DISARM),
-      confirmation = 1u,
-      param1 = if (state) 1f else 0f,
-      param2 = 0f,
-    ).throwIfFailure()
-  }
-  
-  suspend fun mavFrames(callback: (String, WritableMap) -> Unit) {
-    mavController.fcu.message.collect {
-      val result = generateMsg(it)
-
-      if (result!= null) callback("message", result)
+  fun changeArmState(state: Boolean, promise: Promise) = MavUtils.promiseResult(promise) {
+    withTimeout(3000) {
+      mavController.sendCommandLong(
+        command = MavEnumValue.of(MavCmd.COMPONENT_ARM_DISARM),
+        confirmation = 1u,
+        param1 = if (state) 1f else 0f,
+        param2 = 0f,
+      ).throwIfFailure()
     }
   }
 
-  private fun generateMsg(message: MavMessage<*>): WritableMap? {
-    val params = Arguments.createMap()
-    val data = Arguments.createMap()
-
-    return when (message) {
-      is Attitude -> {
-        params.putString("type", Attitude::class.java.simpleName)
-        data.putString("roll", message.roll.toString())
-        data.putString("pitch", message.pitch.toString())
-        data.putString("yaw", message.yaw.toString())
-        data.putString("rollspeed", message.rollspeed.toString())
-        data.putString("pitchspeed", message.pitchspeed.toString())
-        data.putString("yawspeed", message.yawspeed.toString())
-        data.putString("timeBootMs", message.timeBootMs.toString())
-        params.putMap("data", data)
-        params
+  suspend fun subscribeFrame() {
+    mavController.fcu.message.collect {
+      when(it) {
+        is Heartbeat,
+        is Attitude -> {
+          sendEvent(
+            "message",
+            "{\"type\": \"${it::class.simpleName}\", \"data\": ${MavUtils.toJson(it)}}"
+          )
+        }
       }
-
-      else -> null
     }
   }
 }

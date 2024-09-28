@@ -1,4 +1,4 @@
-package com.mavlink
+package com.mavlink.core
 
 import android.util.Log
 import com.divpundir.mavlink.adapters.coroutines.CoroutinesMavConnection

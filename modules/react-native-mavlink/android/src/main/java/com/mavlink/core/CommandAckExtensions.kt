@@ -1,4 +1,4 @@
-package com.mavlink
+package com.mavlink.core
 
 import com.divpundir.mavlink.definitions.common.CommandAck
 import com.divpundir.mavlink.definitions.common.MavResult
@@ -24,7 +24,7 @@ fun CommandAck.throwIfFailure() {
 
     MavResult.CANCELLED -> throw MavException("Cancelled")
 
-    MavResult.COMMAND_UNSUPPORTED_MAV_FRAME -> throw MavException("Unsupported frame")
+    MavResult.COMMAND_UNSUPPORTED_MAV_FRAME -> throw MavException("Unsupported mav frame")
     
     null -> throw MavException("Unknown result")
   }

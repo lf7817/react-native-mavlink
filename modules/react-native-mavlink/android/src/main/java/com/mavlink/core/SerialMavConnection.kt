@@ -1,4 +1,4 @@
-package com.mavlink
+package com.mavlink.core
 
 import android.serialport.SerialPort
 import com.divpundir.mavlink.api.MavDialect

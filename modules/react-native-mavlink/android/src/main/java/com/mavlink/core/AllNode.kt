@@ -1,4 +1,4 @@
-package com.mavlink
+package com.mavlink.core
 
 import com.divpundir.mavlink.api.MavFrame
 import com.divpundir.mavlink.api.MavMessage

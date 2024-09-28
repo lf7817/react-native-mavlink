@@ -101,14 +101,15 @@ dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-
-  api "com.divpundir.mavlink:api:1.2.7"
+  implementation "com.divpundir.mavlink:api:1.2.7"
   implementation "com.divpundir.mavlink:serialization:1.2.7"
   implementation "com.divpundir.mavlink:connection-core:1.2.7"
   implementation "com.divpundir.mavlink:connection-udp:1.2.7"
+  implementation "com.divpundir.mavlink:connection-tcp:1.2.7"
   implementation "com.divpundir.mavlink:adapter-coroutines:1.2.7"
-
-  implementation "com.licheedev:android-serialport:2.1.4"
+  implementation "com.google.code.gson:gson:2.11.0"
+  implementation "com.licheedev:android-serialport:2.1.5"
+  implementation "io.insert-koin:koin-android:4.0.0"
 }
 
 tasks.generateMavlink {
