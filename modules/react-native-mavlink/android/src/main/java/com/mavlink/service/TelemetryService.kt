@@ -9,7 +9,6 @@ import com.divpundir.mavlink.definitions.common.RequestDataStream
 import com.divpundir.mavlink.definitions.minimal.Heartbeat
 import com.divpundir.mavlink.definitions.minimal.MavModeFlag
 import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactApplicationContext
 import com.mavlink.core.MavUtils
 import com.mavlink.core.MavController
 import com.mavlink.core.sendCommandLong
@@ -18,11 +17,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeout
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class TelemetryService(reactContext: ReactApplicationContext): MavService(reactContext), KoinComponent {
-  private val mavController: MavController by inject()
+class TelemetryService(
+  private val mavController: MavController,
+  private val rnEventEmitterService: RNEventEmitterService) {
 
   val armed: Flow<Boolean> = mavController.fcu.message
     .filterIsInstance<Heartbeat>()
@@ -66,7 +64,7 @@ class TelemetryService(reactContext: ReactApplicationContext): MavService(reactC
       when(it) {
         is Heartbeat,
         is Attitude -> {
-          sendEvent(
+          rnEventEmitterService.sendEvent(
             "message",
             "{\"type\": \"${it::class.simpleName}\", \"data\": ${MavUtils.toJson(it)}}"
           )

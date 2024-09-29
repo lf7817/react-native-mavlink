@@ -5,7 +5,6 @@ import com.divpundir.mavlink.adapters.coroutines.tryConnect
 import com.divpundir.mavlink.connection.StreamState
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactApplicationContext
 import com.mavlink.core.MavUtils
 import com.mavlink.core.MavController
 import com.mavlink.core.createSerial
@@ -18,13 +17,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import java.io.File
 
-class ConnectionService(reactContext: ReactApplicationContext): MavService(reactContext), KoinComponent {
-  private val mavController: MavController by inject()
-  private val telemetryService: TelemetryService by inject()
+class ConnectionService(
+  private val mavController: MavController,
+  private val telemetryService: TelemetryService,
+  private val rnEventEmitterService: RNEventEmitterService
+) {
   private var connectJob: Job? = null
   private var frameJob: Job? = null
   
@@ -74,7 +73,7 @@ class ConnectionService(reactContext: ReactApplicationContext): MavService(react
           mavController.connection.streamState.collect {
             when (it) {
               is StreamState.Inactive.Failed -> {
-                sendEvent("connection:status", "Failed")
+                rnEventEmitterService.sendEvent("connection:status", "Failed")
                 Log.d("Mavlink","意外断开连接，原因: ${it.cause}")
                 Log.d("Mavlink","尝试重新连接中...")
                 while (!mavController.connection.tryConnect(this)) {
@@ -83,12 +82,12 @@ class ConnectionService(reactContext: ReactApplicationContext): MavService(react
                 Log.d("Mavlink","重新连接成功！")
               }
               is StreamState.Inactive.Stopped -> {
-                sendEvent("connection:status", "Stopped")
+                rnEventEmitterService.sendEvent("connection:status", "Stopped")
                 Log.d("Mavlink","连接处于关闭状态，可能还没连接过或者用户主动关闭了连接")
               }
               is StreamState.Active -> {
                 frameJob?.cancel()
-                sendEvent("connection:status", "Active")
+                rnEventEmitterService.sendEvent("connection:status", "Active")
                 promise.resolve(true)
                 frameJob = launch { telemetryService.subscribeFrame() }
                 Log.d("Mavlink","已连接到Rover!")
