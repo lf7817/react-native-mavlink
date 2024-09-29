@@ -12,12 +12,17 @@ import com.mavlink.service.RNEventEmitterService
 import com.mavlink.service.TelemetryService
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
-import org.koin.core.context.startKoin
+import org.koin.core.context.GlobalContext
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 class MavlinkPackage : ReactPackage {
   override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
+    // 开发时 reload会导致createNativeModules多次调用，导致 koin 重复初始化报错
+    if (GlobalContext.getKoinApplicationOrNull() != null) {
+      GlobalContext.stopKoin()
+    }
+
     val appModule = module {
       single { MavController(255u, 1u, CommonDialect) }
       single { RNEventEmitterService(reactContext) }
@@ -26,7 +31,7 @@ class MavlinkPackage : ReactPackage {
       singleOf(::ParameterService)
     }
 
-    startKoin {
+    GlobalContext.startKoin {
       androidContext(reactContext)
       androidLogger()
       modules(appModule)
