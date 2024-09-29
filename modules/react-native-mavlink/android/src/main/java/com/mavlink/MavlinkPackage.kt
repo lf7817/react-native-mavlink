@@ -13,6 +13,7 @@ import com.mavlink.service.TelemetryService
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 class MavlinkPackage : ReactPackage {
@@ -20,9 +21,9 @@ class MavlinkPackage : ReactPackage {
     val appModule = module {
       single { MavController(255u, 1u, CommonDialect) }
       single { RNEventEmitterService(reactContext) }
-      single { ConnectionService(get(), get(), get()) }
-      single { TelemetryService(get(), get()) }
-      single { ParameterService(get(), get()) }
+      singleOf(::ConnectionService)
+      singleOf(::TelemetryService)
+      singleOf(::ParameterService)
     }
 
     startKoin {
